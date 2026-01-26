@@ -1,0 +1,32 @@
+[project]
+name = "hackathon-todo-backend"
+version = "0.1.0"
+description = "Backend for the multi-user todo application"
+authors = [{name = "WaterProof Fish", email = "waterprooffish99@example.com"}]
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.104.1",
+    "sqlmodel>=0.0.8",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.5.0",
+    "pydantic[email]>=2.5.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "bcrypt==4.0.1",  # Pin bcrypt to compatible version for Python 3.13
+    "python-multipart>=0.0.6",
+    "better-exceptions>=0.3.3",
+    "python-dotenv>=1.0.0",
+    "asyncpg>=0.29.0",
+    "psycopg2-binary>=2.9.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "httpx>=0.25.0",
+]

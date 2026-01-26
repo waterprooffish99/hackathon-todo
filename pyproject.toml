@@ -1,0 +1,39 @@
+[project]
+name = "hackathon-todo"
+version = "0.1.0"
+description = "Evolution of Todo Hackathon Project"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "specifyplus>=0.0.20.post1",
+]
+[tool.uv]
+dev-dependencies = [
+    "pytest >=7.4.0",  # Stable testing
+    "black >=24.4.2",  # Code formatter
+]
+
+[dependencies]
+# Phase I: Basic Python
+python = "^3.12"  # Stable
+
+# Phase II: Full-Stack
+fastapi = "0.111.0"  # Stable, compatible with SQLModel
+sqlmodel = "0.0.14"  # Stable ORM
+uvicorn = "0.22.0"  # Server
+pydantic = "2.7.1"  # For models
+pyjwt = "2.8.0"  # Stable JWT for Better Auth integration (no sign-up errors)
+passlib = "1.7.4"  # Hashing (if needed for auth fallback)
+bcrypt = "4.0.1"  # Stable hashing
+
+# Phase III: AI Chatbot
+openai = "1.30.1"  # Stable Agents SDK
+# MCP SDK: Install via git in specs (official stable from GitHub)
+
+# Phase IV/V: Deployment (Python parts)
+kafka-python = "2.0.2"  # Stable for Kafka
+dapr-sdk = "1.12.0"  # Stable Dapr runtime
+httpx = "0.24.1"  # For Dapr HTTP
+
+# General
+psycopg2-binary = "2.9.9"  # Stable Neon DB connector
