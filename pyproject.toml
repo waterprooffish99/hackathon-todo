@@ -5,6 +5,7 @@ description = "Evolution of Todo Hackathon Project"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "pytest>=9.0.2",
     "specifyplus>=0.0.20.post1",
 ]
 [tool.uv]

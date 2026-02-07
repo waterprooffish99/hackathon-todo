@@ -91,6 +91,7 @@ name = "hackathon-todo"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "pytest" },
     { name = "specifyplus" },
 ]
 
@@ -101,7 +102,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "specifyplus", specifier = ">=0.0.20.post1" }]
+requires-dist = [
+    { name = "pytest", specifier = ">=9.0.2" },
+    { name = "specifyplus", specifier = ">=0.0.20.post1" },
+]
 
 [package.metadata.requires-dev]
 dev = [

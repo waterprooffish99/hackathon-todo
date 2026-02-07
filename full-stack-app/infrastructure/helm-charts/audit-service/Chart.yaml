@@ -1,0 +1,6 @@
+apiVersion: v2
+name: audit-service
+description: Audit Service for the Cloud-Native AI Todo Platform
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

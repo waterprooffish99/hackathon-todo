@@ -1,0 +1,67 @@
+# Default values for notification-service
+
+replicaCount: 1
+
+image:
+  repository: notification-service
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Custom configuration for the notification service
+env:
+  DATABASE_URL: "postgresql://user:password@postgres:5432/todo_db"
+  DAPR_HTTP_PORT: "3500"
+  DAPR_GRPC_PORT: "50001"
+
+dapr:
+  enabled: true
+  appId: "notification-service"
+  config: "dapr-config"
+
+monitoring:
+  enabled: false
+
+logging:
+  enabled: true
+  level: "INFO"
+  format: "json"
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

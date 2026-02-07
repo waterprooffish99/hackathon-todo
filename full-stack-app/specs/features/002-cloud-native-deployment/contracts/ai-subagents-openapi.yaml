@@ -1,0 +1,342 @@
+openapi: 3.0.3
+info:
+  title: AI Subagents API
+  description: API contracts for skill-based AI subagents in the cloud-native todo platform
+  version: 1.0.0
+servers:
+  - url: http://task-interpreter-service:8000
+    description: Task Interpreter Service
+  - url: http://scheduling-intelligence-service:8000
+    description: Scheduling Intelligence Service
+  - url: http://reminder-reasoning-service:8000
+    description: Reminder Reasoning Service
+
+paths:
+  /v1/interpret-task:
+    post:
+      summary: Interpret natural language task description
+      description: Process natural language input to extract task properties and structure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: Natural language task description
+                  example: "Buy groceries tomorrow morning"
+                context:
+                  type: object
+                  description: Context for interpretation
+                  properties:
+                    user_preferences:
+                      type: object
+                      description: User-specific preferences for interpretation
+                    timezone:
+                      type: string
+                      description: User's timezone
+                    locale:
+                      type: string
+                      description: User's locale
+      responses:
+        '200':
+          description: Interpreted task structure
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    description: Extracted task title
+                  description:
+                    type: string
+                    description: Extracted task description
+                  priority:
+                    type: string
+                    enum: [low, medium, high]
+                    description: Suggested priority
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                    description: Suggested tags
+                  due_at:
+                    type: string
+                    format: date-time
+                    description: Suggested due date
+                  remind_at:
+                    type: string
+                    format: date-time
+                    description: Suggested reminder time
+                  recurrence_rule:
+                    type: string
+                    enum: [daily, weekly, monthly]
+                    description: Suggested recurrence rule
+                  confidence:
+                    type: number
+                    minimum: 0
+                    maximum: 1
+                    description: Confidence score of interpretation
+                  extracted_entities:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        entity_type:
+                          type: string
+                        value:
+                          type: string
+                        confidence:
+                          type: number
+                          minimum: 0
+                          maximum: 1
+        '400':
+          description: Invalid input
+
+  /v1/suggest-schedule:
+    post:
+      summary: Suggest optimal scheduling for tasks
+      description: Analyze tasks and user patterns to suggest optimal due dates and reminders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - task
+              properties:
+                task:
+                  $ref: '#/components/schemas/Task'
+                user_profile:
+                  type: object
+                  description: User's schedule and preferences
+                  properties:
+                    work_hours_start:
+                      type: string
+                      format: time
+                      description: User's typical work start time
+                    work_hours_end:
+                      type: string
+                      format: time
+                      description: User's typical work end time
+                    preferred_days:
+                      type: array
+                      items:
+                        type: string
+                        enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+                      description: Preferred days for certain types of tasks
+                    timezone:
+                      type: string
+                      description: User's timezone
+                    past_behavior:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          task_type:
+                            type: string
+                          completion_rate:
+                            type: number
+                          average_completion_time:
+                            type: number
+                            description: Average time in hours
+                existing_tasks:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Task'
+                  description: User's existing tasks to avoid conflicts
+      responses:
+        '200':
+          description: Scheduling suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggested_due_at:
+                    type: string
+                    format: date-time
+                    description: Suggested due date
+                  suggested_remind_at:
+                    type: string
+                    format: date-time
+                    description: Suggested reminder time
+                  reasoning:
+                    type: string
+                    description: Explanation of scheduling decision
+                  conflicts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        conflict_type:
+                          type: string
+                        description:
+                          type: string
+                        severity:
+                          type: string
+                          enum: [low, medium, high]
+        '400':
+          description: Invalid input
+
+  /v1/analyze-reminders:
+    post:
+      summary: Analyze and optimize reminder settings
+      description: Calculate optimal reminder timing based on task type and user behavior
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - task
+              properties:
+                task:
+                  $ref: '#/components/schemas/Task'
+                user_preferences:
+                  type: object
+                  properties:
+                    notification_methods:
+                      type: array
+                      items:
+                        type: string
+                        enum: [email, sms, push, none]
+                      description: Preferred notification methods
+                    quiet_hours:
+                      type: object
+                      properties:
+                        start:
+                          type: string
+                          format: time
+                        end:
+                          type: string
+                          format: time
+                      description: Time window when notifications are suppressed
+                    reminder_advance_time:
+                      type: integer
+                      description: Default time in minutes before due date to send reminder
+                    task_category_preferences:
+                      type: object
+                      additionalProperties:
+                        type: integer
+                      description: Category-specific reminder advance times
+                task_category:
+                  type: string
+                  description: Category of the task (work, personal, health, etc.)
+      responses:
+        '200':
+          description: Reminder analysis and recommendations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommended_reminder_times:
+                    type: array
+                    items:
+                      type: string
+                      format: date-time
+                    description: Recommended reminder times
+                  notification_method:
+                    type: string
+                    enum: [email, sms, push, none]
+                    description: Recommended notification method
+                  reasoning:
+                    type: string
+                    description: Explanation of recommendation
+                  alternatives:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        time:
+                          type: string
+                          format: date-time
+                        method:
+                          type: string
+                        reason:
+                          type: string
+        '400':
+          description: Invalid input
+
+  /v1/health:
+    get:
+      summary: Health check
+      description: Check the health of the AI subagent service
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded, unhealthy]
+                  details:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        status:
+                          type: string
+                          enum: [up, down]
+                        message:
+                          type: string
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        task_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 10000
+        priority:
+          type: string
+          enum: [low, medium, high]
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          maxItems: 10
+        due_at:
+          type: string
+          format: date-time
+        remind_at:
+          type: string
+          format: date-time
+        completed:
+          type: boolean
+        completion_date:
+          type: string
+          format: date-time
+        recurrence_rule:
+          type: string
+          enum: [daily, weekly, monthly]
+        user_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        version:
+          type: integer

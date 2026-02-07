@@ -1,0 +1,25 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "main-api.fullname" . }}
+  labels:
+    {{- include "main-api.labels" . | nindent 4 }}
+  namespace: monitoring  # Usually deployed in a monitoring namespace
+spec:
+  selector:
+    matchLabels:
+      {{- include "main-api.selectorLabels" . | nindent 6 }}
+  endpoints:
+  - port: http
+    interval: 30s
+    path: /metrics
+    honorLabels: true
+{{- end }}
+{{- define "monitoring.enabled" -}}
+{{- if .Values.global -}}
+{{- .Values.global.monitoring.enabled | default false -}}
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}

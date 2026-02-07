@@ -1,0 +1,56 @@
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: dapr-config
+spec:
+  tracing:
+    samplingRate: "1"
+    zipkin:
+      endpointAddress: "http://zipkin.default.svc.cluster.local:9411/api/v2/spans"
+  metric:
+    enabled: true
+  secretStores:
+  - name: kubernetes
+    type: secretstores.kubernetes
+  httpPipeline:
+    handlers: []
+  accessControl:
+    defaultAction: allow
+    trustDomain: "pubsub-actor-demo"
+    policies:
+    - appId: main-api
+      defaultAction: allow
+      trustDomain: "pubsub-actor-demo"
+      namespace: default
+      rules:
+      - name: allow-statestore
+        action: allow
+        operation: ["GET", "POST", "PUT", "DELETE"]
+        httpVerb: ["*"]
+    - appId: recurring-task-service
+      defaultAction: allow
+      trustDomain: "pubsub-actor-demo"
+      namespace: default
+      rules:
+      - name: allow-pubsub
+        action: allow
+        operation: ["publish", "subscribe"]
+        httpVerb: ["*"]
+    - appId: notification-service
+      defaultAction: allow
+      trustDomain: "pubsub-actor-demo"
+      namespace: default
+      rules:
+      - name: allow-pubsub
+        action: allow
+        operation: ["publish", "subscribe"]
+        httpVerb: ["*"]
+    - appId: audit-service
+      defaultAction: allow
+      trustDomain: "pubsub-actor-demo"
+      namespace: default
+      rules:
+      - name: allow-pubsub
+        action: allow
+        operation: ["publish", "subscribe"]
+        httpVerb: ["*"]

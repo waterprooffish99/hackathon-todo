@@ -1,0 +1,16 @@
+[project]
+name = "phase-1-console"
+version = "1.0.0"
+description = "In-Memory Console Todo Application - Phase I"
+authors = [{name = "Developer", email = "dev@example.com"}]
+requires-python = ">=3.13"
+dependencies = [
+    "cmd2>=2.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+dev-dependencies = []

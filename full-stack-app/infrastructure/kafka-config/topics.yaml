@@ -1,0 +1,45 @@
+# Kafka topic configurations for Cloud-Native AI Todo Platform
+
+# Topic for task lifecycle events
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: task-events
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 604800000  # 7 days retention
+    segment.bytes: 1073741824  # 1GB
+
+---
+# Topic for reminder events
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: reminders
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 86400000  # 1 day retention (reminders are short-lived)
+    segment.bytes: 1073741824  # 1GB
+
+---
+# Topic for task updates (real-time sync)
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: task-updates
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 86400000  # 1 day retention
+    segment.bytes: 1073741824  # 1GB
