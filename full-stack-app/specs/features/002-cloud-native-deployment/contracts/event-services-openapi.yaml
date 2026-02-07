@@ -1,0 +1,448 @@
+openapi: 3.0.3
+info:
+  title: Event-Driven Services API
+  description: API contracts for event-driven microservices in the cloud-native todo platform
+  version: 1.0.0
+servers:
+  - url: http://recurring-task-service:8000
+    description: Recurring Task Service
+  - url: http://notification-service:8000
+    description: Notification Service
+  - url: http://audit-service:8000
+    description: Audit Service
+
+paths:
+  # Recurring Task Service Endpoints
+  /v1/events/task-completed:
+    post:
+      summary: Handle task completion event
+      description: Process task completion events and create next occurrence if recurring
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCompletedEvent'
+      responses:
+        '200':
+          description: Event processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                  type: string
+                  message:
+                  type: string
+                  created_task:
+                  $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid event data
+      x-dapr-subscription:
+        pubsubname: task-pubsub
+        topic: task-events
+        route: /v1/events/task-completed
+
+  # Notification Service Endpoints
+  /v1/events/reminder-triggered:
+    post:
+      summary: Handle reminder trigger event
+      description: Process reminder events and send appropriate notifications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderEvent'
+      responses:
+        '200':
+          description: Notification processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  notification_result:
+                    type: object
+                    properties:
+                      sent_at:
+                        type: string
+                        format: date-time
+                      method:
+                        type: string
+                      success:
+                        type: boolean
+        '400':
+          description: Invalid reminder data
+      x-dapr-subscription:
+        pubsubname: reminder-pubsub
+        topic: reminders
+        route: /v1/events/reminder-triggered
+
+  /v1/notifications/test:
+    post:
+      summary: Send test notification
+      description: Send a test notification to verify delivery mechanisms
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - message
+              properties:
+                user_id:
+                  type: string
+                  format: uuid
+                message:
+                  type: string
+                method:
+                  type: string
+                  enum: [email, sms, push]
+                  default: push
+      responses:
+        '200':
+          description: Test notification sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  sent_at:
+                    type: string
+                    format: date-time
+                  method:
+                    type: string
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+
+  # Audit Service Endpoints
+  /v1/events/task-operation:
+    post:
+      summary: Handle task operation events
+      description: Process all task lifecycle events for audit logging
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskEvent'
+      responses:
+        '200':
+          description: Audit record created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  audit_log_id:
+                    type: string
+                    format: uuid
+        '400':
+          description: Invalid event data
+      x-dapr-subscription:
+        pubsubname: audit-pubsub
+        topic: task-events
+        route: /v1/events/task-operation
+
+  /v1/audit/logs:
+    get:
+      summary: Query audit logs
+      description: Retrieve audit logs for compliance and debugging
+      parameters:
+        - name: user_id
+          in: query
+          description: Filter by user ID
+          schema:
+            type: string
+            format: uuid
+        - name: task_id
+          in: query
+          description: Filter by task ID
+          schema:
+            type: string
+            format: uuid
+        - name: action
+          in: query
+          description: Filter by action type
+          schema:
+            type: string
+            enum: [task_created, task_updated, task_completed, task_deleted]
+        - name: start_date
+          in: query
+          description: Filter by start date
+          schema:
+            type: string
+            format: date-time
+        - name: end_date
+          in: query
+          description: Filter by end date
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      responses:
+        '200':
+          description: Audit logs retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          description: Unauthorized
+
+  /v1/health:
+    get:
+      summary: Health check
+      description: Check the health of the event-driven service
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded, unhealthy]
+                  details:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        status:
+                          type: string
+                          enum: [up, down]
+                        message:
+                          type: string
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        task_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 10000
+        priority:
+          type: string
+          enum: [low, medium, high]
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          maxItems: 10
+        due_at:
+          type: string
+          format: date-time
+        remind_at:
+          type: string
+          format: date-time
+        completed:
+          type: boolean
+        completion_date:
+          type: string
+          format: date-time
+        recurrence_rule:
+          type: string
+          enum: [daily, weekly, monthly]
+        user_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        version:
+          type: integer
+
+    TaskEvent:
+      type: object
+      required:
+        - event_type
+        - event_version
+        - task_id
+        - user_id
+        - timestamp
+        - correlation_id
+      properties:
+        event_id:
+          type: string
+          format: uuid
+          description: Unique event identifier
+        event_type:
+          type: string
+          description: Type of event (e.g., task.created, task.updated, task.completed, task.deleted)
+        event_version:
+          type: string
+          description: Semantic version of event schema
+        task_id:
+          type: string
+          format: uuid
+          description: ID of the task involved in the event
+        user_id:
+          type: string
+          format: uuid
+          description: ID of the user who initiated the event
+        payload:
+          $ref: '#/components/schemas/Task'
+          description: Full task payload at the time of the event
+        timestamp:
+          type: string
+          format: date-time
+          description: When the event occurred
+        correlation_id:
+          type: string
+          description: ID for tracing related events
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Additional event metadata
+
+    TaskCompletedEvent:
+      allOf:
+        - $ref: '#/components/schemas/TaskEvent'
+        - type: object
+          properties:
+            event_type:
+              type: string
+              enum: [task.completed]
+            payload:
+              $ref: '#/components/schemas/Task'
+
+    ReminderEvent:
+      type: object
+      required:
+        - event_type
+        - event_version
+        - task_id
+        - user_id
+        - timestamp
+        - correlation_id
+      properties:
+        event_id:
+          type: string
+          format: uuid
+        event_type:
+          type: string
+          description: Type of reminder event
+        event_version:
+          type: string
+        task_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        task_title:
+          type: string
+          description: Title of the task that triggered the reminder
+        reminder_time:
+          type: string
+          format: date-time
+          description: Time when the reminder was scheduled
+        notification_method:
+          type: string
+          enum: [email, sms, push]
+          description: Preferred notification method
+        timestamp:
+          type: string
+          format: date-time
+        correlation_id:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+
+    AuditLog:
+      type: object
+      required:
+        - log_id
+        - event_id
+        - task_id
+        - user_id
+        - action
+        - new_state
+        - timestamp
+      properties:
+        log_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        task_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [task_created, task_updated, task_completed, task_deleted]
+        previous_state:
+          $ref: '#/components/schemas/Task'
+          description: Previous state of the task (null for created)
+        new_state:
+          $ref: '#/components/schemas/Task'
+          description: New state of the task
+        timestamp:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties: true
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer

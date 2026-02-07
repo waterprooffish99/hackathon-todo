@@ -1,0 +1,41 @@
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: mtls-config
+spec:
+  mtls:
+    enabled: true
+    workloadCertTTL: "24h"
+    allowedClockSkew: "15m"
+---
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: secure-statestore
+spec:
+  type: state.redis
+  version: v1
+  metadata:
+  - name: redisHost
+    value: "localhost:6379"
+  - name: redisPassword
+    value: ""
+  - name: enableTLS
+    value: "true"
+  - name: actorStateStore
+    value: "true"
+---
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: secure-pubsub
+spec:
+  type: pubsub.redis
+  version: v1
+  metadata:
+  - name: redisHost
+    value: "localhost:6379"
+  - name: redisPassword
+    value: ""
+  - name: enableTLS
+    value: "true"

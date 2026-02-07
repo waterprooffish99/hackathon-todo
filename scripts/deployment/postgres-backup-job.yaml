@@ -1,0 +1,98 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-backup
+  namespace: default
+spec:
+  ttlSecondsAfterFinished: 3600  # Clean up job after 1 hour
+  template:
+    spec:
+      containers:
+      - name: postgres-backup
+        image: postgres:13-alpine
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          #!/bin/bash
+          pg_dump -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB > /backup/backup-$(date +%Y%m%d-%H%M%S).sql
+          echo "Backup completed"
+        env:
+        - name: POSTGRES_HOST
+          value: "postgres-service"
+        - name: POSTGRES_USER
+          value: "todo_user"
+        - name: POSTGRES_DB
+          value: "todo_db"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        volumeMounts:
+        - name: backup-storage
+          mountPath: /backup
+      restartPolicy: Never
+      volumes:
+      - name: backup-storage
+        persistentVolumeClaim:
+          claimName: backup-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup-scheduled
+  namespace: default
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 86400  # Clean up after 24 hours
+      template:
+        spec:
+          containers:
+          - name: postgres-backup
+            image: postgres:13-alpine
+            command: ["/bin/sh", "-c"]
+            args:
+            - |
+              #!/bin/bash
+              TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+              FILENAME="backup-$TIMESTAMP.sql"
+              pg_dump -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB > /backup/$FILENAME
+
+              # Optional: compress the backup
+              gzip /backup/$FILENAME
+
+              echo "Scheduled backup completed: $FILENAME.gz"
+            env:
+            - name: POSTGRES_HOST
+              value: "postgres-service"
+            - name: POSTGRES_USER
+              value: "todo_user"
+            - name: POSTGRES_DB
+              value: "todo_db"
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-pvc

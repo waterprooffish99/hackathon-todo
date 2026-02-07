@@ -1,0 +1,114 @@
+# Default values for the umbrella chart
+
+main-api:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: main-api
+    pullPolicy: IfNotPresent
+    tag: ""
+  service:
+    type: ClusterIP
+    port: 80
+  ingress:
+    enabled: false
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  env:
+    DATABASE_URL: "postgresql://user:password@postgres:5432/todo_db"
+    JWT_SECRET_KEY: "your-super-secret-key-change-in-production"
+    DAPR_HTTP_PORT: "3500"
+    DAPR_GRPC_PORT: "50001"
+  dapr:
+    enabled: true
+    appId: "main-api"
+    config: "dapr-config"
+
+recurring-task-service:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: recurring-task-service
+    pullPolicy: IfNotPresent
+    tag: ""
+  service:
+    type: ClusterIP
+    port: 80
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  env:
+    DATABASE_URL: "postgresql://user:password@postgres:5432/todo_db"
+    DAPR_HTTP_PORT: "3500"
+    DAPR_GRPC_PORT: "50001"
+  dapr:
+    enabled: true
+    appId: "recurring-task-service"
+    config: "dapr-config"
+
+notification-service:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: notification-service
+    pullPolicy: IfNotPresent
+    tag: ""
+  service:
+    type: ClusterIP
+    port: 80
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  env:
+    DATABASE_URL: "postgresql://user:password@postgres:5432/todo_db"
+    DAPR_HTTP_PORT: "3500"
+    DAPR_GRPC_PORT: "50001"
+  dapr:
+    enabled: true
+    appId: "notification-service"
+    config: "dapr-config"
+
+audit-service:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: audit-service
+    pullPolicy: IfNotPresent
+    tag: ""
+  service:
+    type: ClusterIP
+    port: 80
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  env:
+    DATABASE_URL: "postgresql://user:password@postgres:5432/todo_db"
+    DAPR_HTTP_PORT: "3500"
+    DAPR_GRPC_PORT: "50001"
+  dapr:
+    enabled: true
+    appId: "audit-service"
+    config: "dapr-config"
+
+global:
+  # Global settings that can be referenced by child charts
+  dapr:
+    enabled: true
+    config: "dapr-config"

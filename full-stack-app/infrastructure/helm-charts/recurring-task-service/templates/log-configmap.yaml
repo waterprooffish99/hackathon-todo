@@ -1,0 +1,31 @@
+{{- if .Values.logging.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "recurring-task-service.fullname" . }}-logging
+  labels:
+    {{- include "recurring-task-service.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+data:
+  logback-spring.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <configuration>
+      <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+          <providers>
+            <timestamp/>
+            <logLevel/>
+            <loggerName/>
+            <message/>
+            <mdc/>
+            <arguments/>
+            <stackTrace/>
+          </providers>
+        </encoder>
+      </appender>
+
+      <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+      </root>
+    </configuration>
+{{- end }}

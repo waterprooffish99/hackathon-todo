@@ -1,0 +1,35 @@
+# Spec-Kit Plus Configuration for Hackathon Todo Project
+# Defines the organization and handling of specifications
+
+spec_directories:
+  features:
+    path: ./specs/features/
+    description: "High-level requirements and acceptance criteria"
+  api:
+    path: ./specs/api/
+    description: "REST endpoints and MCP tool specifications"
+  database:
+    path: ./specs/database/
+    description: "Schema and model specifications for Neon DB"
+  ui:
+    path: ./specs/ui/
+    description: "Component and page specifications for Next.js"
+
+project_settings:
+  name: "Evolution of Todo - Full Stack App"
+  phases: ["Phase 2", "Phase 3", "Phase 4", "Phase 5"]
+  technology_stack:
+    - "Next.js 16+ (App Router)"
+    - "FastAPI"
+    - "SQLModel"
+    - "Neon Serverless PostgreSQL"
+    - "Better Auth"
+    - "OpenAI Agents SDK"
+    - "MCP SDK"
+    - "Dapr"
+    - "Kafka"
+    - "Kubernetes/Helm"
+
+workflow:
+  process: "Specify → Plan → Tasks → Implement"
+  governance: "All changes must be driven by spec updates and tracked in speckit.tasks"
